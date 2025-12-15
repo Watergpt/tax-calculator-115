@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>115年度綜合所得稅試算機</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', Arial, sans-serif;
+            background: linear-gradient(135deg, #4A5FD9 0%, #6B7FE8 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .year-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+        
+        .subtitle {
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+        
+        .left-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .right-panel {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .result-title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .result-amount {
+            font-size: 42px;
+            font-weight: bold;
+            color: #4A5FD9;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .result-breakdown {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .breakdown-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            color: #4A5FD9;
+            padding-top: 12px;
+            margin-top: 5px;
+            border-top: 2px solid #4A5FD9;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #4A5FD9;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4A5FD9;
+            box-shadow: 0 0 0 3px rgba(74, 95, 217, 0.1);
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .radio-option {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+        
+        .radio-label {
+            display: block;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .radio-option input[type="radio"]:checked + .radio-label {
+            background: #4A5FD9;
+            color: white;
+            border-color: #4A5FD9;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .info-text {
+            font-size: 13px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .calculation-formula {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            border-left: 3px solid #4A5FD9;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .right-panel {
+                position: static;
+            }
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 綜合所得稅試算機</h1>
+            <div class="year-badge">115年度最新版本</div>
+            <p class="subtitle">適用於115年度申報（114年度所得）</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="section">
+                    <div class="section-title">👤 基本資料</div>
+                    
+                    <div class="form-group">
+                        <label>我的年紀</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="age-under70" name="myAge" value="under70" checked>
+                                <label for="age-under70" class="radio-label">小於 70 歲</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="age-over70" name="myAge" value="over70">
+                                <label for="age-over70" class="radio-label">70 歲以上</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>配偶狀態</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="spouse-none" name="spouseStatus" value="none" checked>
+                                <label for="spouse-none" class="radio-label">無配偶</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="spouse-under70" name="spouseStatus" value="under70">
+                                <label for="spouse-under70" class="radio-label">配偶 < 70歲</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="spouse-over70" name="spouseStatus" value="over70">
+                                <label for="spouse-over70" class="radio-label">配偶 ≥ 70歲</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>扶養 < 70歲人數</label>
+                            <input type="number" id="dependentsUnder70" value="0" min="0" max="20">
+                            <p class="info-text">例如：子女</p>
+                        </div>
+                        <div class="form-group">
+                            <label>扶養 ≥ 70歲人數</label>
+                            <input type="number" id="dependentsOver70" value="0" min="0" max="20">
+                            <p class="info-text">例如：父母</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">💰 所得資料</div>
+                    
+                    <div class="form-group">
+                        <label>114年度總薪資所得</label>
+                        <input type="number" id="totalIncome" value="0" min="0" step="1000">
+                        <p class="info-text">全年薪資總額</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>領薪資人數</label>
+                        <input type="number" id="salaryPersonCount" value="1" min="0" max="20">
+                        <p class="info-text">每人可扣除218,000元</p>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">📝 特別扣除額</div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>身心障礙人數</label>
+                            <input type="number" id="disabilityCount" value="0" min="0" max="20">
+                            <p class="info-text">每人 218,000元</p>
+                        </div>
+                        <div class="form-group">
+                            <label>教育學費人數</label>
+                            <input type="number" id="educationCount" value="0" min="0" max="20">
+                            <p class="info-text">每人 25,000元</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>幼兒學前扣除額</label>
+                        <input type="number" id="childcareAmount" value="0" min="0" step="1000">
+                        <p class="info-text">1名：150,000元 / 2名以上：225,000元/人</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>長期照顧人數</label>
+                        <input type="number" id="longTermCareCount" value="0" min="0" max="20">
+                        <p class="info-text">每人 120,000元</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="result-card">
+                    <div class="result-title">應納稅額</div>
+                    <div class="result-amount" id="finalTax">0 元</div>
+                    
+                    <div class="result-breakdown">
+                        <div class="breakdown-row">
+                            <span>綜合所得總額</span>
+                            <span id="displayIncome">0 元</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>免稅額</span>
+                            <span id="displayExemption">-0 元</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>扣除額</span>
+                            <span id="displayDeduction">-0 元</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>基本生活費差額</span>
+                            <span id="displayBasicLiving">-0 元</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span>綜合所得淨額</span>
+                            <span id="displayNetIncome">0 元</span>
+                        </div>
+                    </div>
+                    
+                    <div class="calculation-formula">
+                        <strong>稅額計算：</strong><br>
+                        淨額 × <span id="calcTaxRate">5</span>% - <span id="calcProgressive">0</span> 元
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const TAX_2026 = {
+            exemption: { under70: 97000, over70: 145500 },
+            standardDeduction: { single: 131000, married: 262000 },
+            specialDeduction: { salary: 218000, disability: 218000, education: 25000, longTermCare: 120000 },
+            basicLiving: 404000,
+            taxBrackets: [
+                { limit: 590000, rate: 0.05, deduction: 0 },
+                { limit: 1330000, rate: 0.12, deduction: 41300 },
+                { limit: 2660000, rate: 0.20, deduction: 147700 },
+                { limit: 4980000, rate: 0.30, deduction: 413700 },
+                { limit: Infinity, rate: 0.40, deduction: 911700 }
+            ]
+        };
+        
+        function calculateTax() {
+            const myAge = document.querySelector('input[name="myAge"]:checked').value;
+            const spouseStatus = document.querySelector('input[name="spouseStatus"]:checked').value;
+            const dependentsUnder70 = parseInt(document.getElementById('dependentsUnder70').value) || 0;
+            const dependentsOver70 = parseInt(document.getElementById('dependentsOver70').value) || 0;
+            
+            let under70Count = dependentsUnder70;
+            let over70Count = dependentsOver70;
+            
+            if (myAge === 'under70') under70Count++;
+            else over70Count++;
+            
+            if (spouseStatus === 'under70') under70Count++;
+            else if (spouseStatus === 'over70') over70Count++;
+            
+            const totalPeople = under70Count + over70Count;
+            const totalExemption = under70Count * TAX_2026.exemption.under70 + over70Count * TAX_2026.exemption.over70;
+            
+            const hasSpouse = spouseStatus !== 'none';
+            const standardDeduction = hasSpouse ? TAX_2026.standardDeduction.married : TAX_2026.standardDeduction.single;
+            
+            const salaryPersonCount = parseInt(document.getElementById('salaryPersonCount').value) || 0;
+            const salaryDeduction = salaryPersonCount * TAX_2026.specialDeduction.salary;
+            
+            const disabilityDeduction = (parseInt(document.getElementById('disabilityCount').value) || 0) * TAX_2026.specialDeduction.disability;
+            const educationDeduction = (parseInt(document.getElementById('educationCount').value) || 0) * TAX_2026.specialDeduction.education;
+            const childcareDeduction = parseFloat(document.getElementById('childcareAmount').value) || 0;
+            const longTermCareDeduction = (parseInt(document.getElementById('longTermCareCount').value) || 0) * TAX_2026.specialDeduction.longTermCare;
+            
+            const totalDeduction = standardDeduction + salaryDeduction + disabilityDeduction + educationDeduction + childcareDeduction + longTermCareDeduction;
+            
+            const basicLivingTotal = totalPeople * TAX_2026.basicLiving;
+            const deductionForBasicLiving = totalExemption + standardDeduction + salaryDeduction + disabilityDeduction + childcareDeduction;
+            const basicLivingDiff = Math.max(basicLivingTotal - deductionForBasicLiving, 0);
+            
+            const totalIncome = parseFloat(document.getElementById('totalIncome').value) || 0;
+            const netIncome = Math.max(totalIncome - totalExemption - totalDeduction - basicLivingDiff, 0);
+            
+            let tax = 0;
+            let taxRate = 0;
+            let progressiveDeduction = 0;
+            
+            for (let bracket of TAX_2026.taxBrackets) {
+                if (netIncome <= bracket.limit) {
+                    tax = netIncome * bracket.rate - bracket.deduction;
+                    taxRate = bracket.rate * 100;
+                    progressiveDeduction = bracket.deduction;
+                    break;
+                }
+            }
+            
+            tax = Math.max(Math.round(tax), 0);
+            
+            document.getElementById('finalTax').textContent = tax.toLocaleString('zh-TW') + ' 元';
+            document.getElementById('displayIncome').textContent = totalIncome.toLocaleString('zh-TW') + ' 元';
+            document.getElementById('displayExemption').textContent = '-' + totalExemption.toLocaleString('zh-TW') + ' 元';
+            document.getElementById('displayDeduction').textContent = '-' + totalDeduction.toLocaleString('zh-TW') + ' 元';
+            document.getElementById('displayBasicLiving').textContent = basicLivingDiff > 0 ? '-' + basicLivingDiff.toLocaleString('zh-TW') + ' 元' : '0 元';
+            document.getElementById('displayNetIncome').textContent = netIncome.toLocaleString('zh-TW') + ' 元';
+            document.getElementById('calcTaxRate').textContent = taxRate;
+            document.getElementById('calcProgressive').textContent = progressiveDeduction.toLocaleString('zh-TW');
+        }
+        
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('change', calculateTax);
+            input.addEventListener('input', calculateTax);
+        });
+        
+        calculateTax();
+    </script>
+</body>
+</html>
